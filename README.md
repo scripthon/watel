@@ -10,6 +10,11 @@ for B is created too, and so on.
 Anything you type inside a topic is sent back to that contact on WhatsApp, so
 Telegram becomes your WhatsApp inbox.
 
+![On the left, a WhatsApp chat list with private conversations from Budi, Siti,
+Andi, Dimas, Rina and Maya. On the right, the same six conversations as
+separate topics inside one Telegram supergroup, with a topic opened to show a
+reply being typed back to Budi.](tewas.jpg)
+
 Current scope: **private chats only**. WhatsApp groups, status updates and
 broadcasts are deliberately ignored.
 
@@ -95,6 +100,47 @@ then prints an 8-digit code to enter under
 **Linked devices → Link with phone number**.
 
 The session is persisted, so later runs connect straight away without pairing.
+
+## Running with Docker Compose
+
+Credentials are read from the same `.env` as a local run, so finish step 3
+first.
+
+The very first run has to be interactive, because pairing prints a QR code
+that needs a real terminal:
+
+```bash
+docker compose run --rm tewas
+```
+
+Pair the device, then stop it with Ctrl-C. The session now lives on the
+`tewas-data` volume, so from here on:
+
+```bash
+docker compose up -d          # start in the background
+docker compose logs -f        # follow the log
+docker compose down           # stop (the volume, and the pairing, survive)
+```
+
+After changing the code, rebuild with `docker compose up -d --build`.
+
+Notes:
+
+- The image builds a static binary with `CGO_ENABLED=0` (the sqlite driver is
+  pure Go), so the runtime layer only needs `ca-certificates`.
+- Both databases live on the `tewas-data` volume. Keep it, or you will have to
+  pair again. `docker compose down -v` deletes it.
+- The bridge runs as uid 10001. The named volume inherits the right ownership
+  automatically; if you switch to a bind mount, `chown 10001` it first or the
+  databases cannot be written.
+- On a headless server, set `WA_PAIR_PHONE` in `.env` and pair with an 8-digit
+  code instead of a QR — much easier than reading a QR out of the logs.
+- Timestamps use `Asia/Jakarta` by default. Override it by setting `TZ` in
+  `.env` (e.g. `TZ=Asia/Makassar`); `tzdata` is installed in the image so any
+  IANA zone works. A local, non-Docker run follows the machine's own timezone
+  instead.
+- `docker compose config` prints every resolved value, including your bot
+  token in cleartext. Handy for debugging, careful where you paste it.
 
 ## Telegram commands
 

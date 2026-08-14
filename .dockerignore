@@ -1,0 +1,18 @@
+# Never let credentials or a paired WhatsApp session reach the build context.
+.env
+data/
+
+.git/
+.gitignore
+
+# Build output and scratch files
+tewas
+x/
+
+# Docs and orchestration are not needed to compile
+README.md
+*.jpg
+*.png
+Dockerfile
+.dockerignore
+docker-compose.yml

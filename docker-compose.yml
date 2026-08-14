@@ -1,0 +1,35 @@
+name: tewas
+
+services:
+  tewas:
+    build: .
+    image: tewas
+    container_name: tewas
+    restart: unless-stopped
+
+    # Credentials come from the same .env file a local run would use.
+    env_file: .env
+
+    # Listed after env_file so these always win: .env.example ships relative
+    # paths, which would put the databases somewhere other than the volume.
+    environment:
+      BRIDGE_DB: /data/bridge.db
+      SESSION_DB: /data/whatsapp.db
+      TZ: ${TZ:-Asia/Jakarta}
+
+    volumes:
+      - tewas-data:/data
+
+    # Pairing prints a QR code, which needs a terminal attached.
+    stdin_open: true
+    tty: true
+
+    # A bridge runs for months; keep its logs from filling the disk.
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+volumes:
+  tewas-data:
