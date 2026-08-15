@@ -13,7 +13,7 @@ Telegram becomes your WhatsApp inbox.
 ![On the left, a WhatsApp chat list with private conversations from Budi, Siti,
 Andi, Dimas, Rina and Maya. On the right, the same six conversations as
 separate topics inside one Telegram supergroup, with a topic opened to show a
-reply being typed back to Budi.](watel.jpg)
+reply being typed back to Budi.](watel.png)
 
 Current scope: **private chats only**. WhatsApp groups, status updates and
 broadcasts are deliberately ignored.
