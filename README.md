@@ -1,6 +1,6 @@
 # WATEL
 
-**The Telegram–WhatsApp Relay**
+**The WhatsApp-Telegram Relay**
 
 Bridges WhatsApp into a single Telegram group, giving every WhatsApp contact
 its own **topic**: when number A messages you, the topic for A is created if it
