@@ -1,4 +1,4 @@
-# TEWAS
+# WATEL
 
 **The Telegram–WhatsApp Relay**
 
@@ -13,7 +13,7 @@ Telegram becomes your WhatsApp inbox.
 ![On the left, a WhatsApp chat list with private conversations from Budi, Siti,
 Andi, Dimas, Rina and Maya. On the right, the same six conversations as
 separate topics inside one Telegram supergroup, with a topic opened to show a
-reply being typed back to Budi.](tewas.jpg)
+reply being typed back to Budi.](watel.jpg)
 
 Current scope: **private chats only**. WhatsApp groups, status updates and
 broadcasts are deliberately ignored.
@@ -87,8 +87,8 @@ members and you do not want them sending messages to WhatsApp.
 ### 4. Run
 
 ```bash
-go build -o tewas ./cmd/tewas
-./tewas
+go build -o watel ./cmd/watel
+./watel
 ```
 
 On the first run a QR code appears in the terminal. Scan it from
@@ -110,11 +110,11 @@ The very first run has to be interactive, because pairing prints a QR code
 that needs a real terminal:
 
 ```bash
-docker compose run --rm tewas
+docker compose run --rm watel
 ```
 
 Pair the device, then stop it with Ctrl-C. The session now lives on the
-`tewas-data` volume, so from here on:
+`watel-data` volume, so from here on:
 
 ```bash
 docker compose up -d          # start in the background
@@ -128,7 +128,7 @@ Notes:
 
 - The image builds a static binary with `CGO_ENABLED=0` (the sqlite driver is
   pure Go), so the runtime layer only needs `ca-certificates`.
-- Both databases live on the `tewas-data` volume. Keep it, or you will have to
+- Both databases live on the `watel-data` volume. Keep it, or you will have to
   pair again. `docker compose down -v` deletes it.
 - The bridge runs as uid 10001. The named volume inherits the right ownership
   automatically; if you switch to a bind mount, `chown 10001` it first or the

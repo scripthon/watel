@@ -7,8 +7,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/thxrhmn/tewas/internal/store"
-	"github.com/thxrhmn/tewas/internal/tg"
+	"github.com/thxrhmn/watel/internal/store"
+	"github.com/thxrhmn/watel/internal/tg"
 )
 
 const helpText = `WhatsApp ↔ Telegram bridge

@@ -33,7 +33,7 @@ go.work.sum
 x
 
 # Compiled bridge binary
-/tewas
+/watel
 
 # WhatsApp session and chat<->topic mapping databases
 /data/

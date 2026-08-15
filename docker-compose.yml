@@ -1,10 +1,10 @@
-name: tewas
+name: watel
 
 services:
-  tewas:
+  watel:
     build: .
-    image: tewas
-    container_name: tewas
+    image: watel
+    container_name: watel
     restart: unless-stopped
 
     # Credentials come from the same .env file a local run would use.
@@ -18,7 +18,7 @@ services:
       TZ: ${TZ:-Asia/Jakarta}
 
     volumes:
-      - tewas-data:/data
+      - watel-data:/data
 
     # Pairing prints a QR code, which needs a terminal attached.
     stdin_open: true
@@ -32,4 +32,4 @@ services:
         max-file: "3"
 
 volumes:
-  tewas-data:
+  watel-data:

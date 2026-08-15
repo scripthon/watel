@@ -1,4 +1,4 @@
-module github.com/thxrhmn/tewas
+module github.com/thxrhmn/watel
 
 go 1.25.0
 

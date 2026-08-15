@@ -13,9 +13,9 @@ import (
 
 	"go.mau.fi/whatsmeow/types"
 
-	"github.com/thxrhmn/tewas/internal/store"
-	"github.com/thxrhmn/tewas/internal/tg"
-	"github.com/thxrhmn/tewas/internal/wa"
+	"github.com/thxrhmn/watel/internal/store"
+	"github.com/thxrhmn/watel/internal/tg"
+	"github.com/thxrhmn/watel/internal/wa"
 )
 
 // Bridge routes messages between one WhatsApp account and one Telegram supergroup.

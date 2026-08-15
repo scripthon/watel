@@ -1,4 +1,4 @@
-// Command tewas bridges one WhatsApp account to one Telegram supergroup,
+// Command watel bridges one WhatsApp account to one Telegram supergroup,
 // giving every WhatsApp contact its own forum topic.
 package main
 
@@ -10,11 +10,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/thxrhmn/tewas/internal/bridge"
-	"github.com/thxrhmn/tewas/internal/config"
-	"github.com/thxrhmn/tewas/internal/store"
-	"github.com/thxrhmn/tewas/internal/tg"
-	"github.com/thxrhmn/tewas/internal/wa"
+	"github.com/thxrhmn/watel/internal/bridge"
+	"github.com/thxrhmn/watel/internal/config"
+	"github.com/thxrhmn/watel/internal/store"
+	"github.com/thxrhmn/watel/internal/tg"
+	"github.com/thxrhmn/watel/internal/wa"
 )
 
 func main() {
@@ -22,7 +22,7 @@ func main() {
 	flag.Parse()
 
 	log.SetFlags(log.LstdFlags | log.Lmsgprefix)
-	log.SetPrefix("tewas ")
+	log.SetPrefix("watel ")
 
 	if err := run(*envFile); err != nil {
 		log.Fatalf("fatal: %v", err)

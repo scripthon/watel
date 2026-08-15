@@ -6,7 +6,7 @@ data/
 .gitignore
 
 # Build output and scratch files
-tewas
+watel
 x/
 
 # Docs and orchestration are not needed to compile
