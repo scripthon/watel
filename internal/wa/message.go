@@ -145,8 +145,14 @@ func (c *Client) extract(ctx context.Context, evt *events.Message) *Incoming {
 		return nil
 	}
 
-	if out.Text == "" && out.Media == nil {
-		return nil
+	// A text reply that quotes a view-once message carries the quoted media in
+	// ContextInfo, so it can be recovered even though the original payload was
+	// withheld from linked devices (the RVO trick). Only when the reply itself
+	// has no media.
+	if out.Media == nil && !c.applyQuotedViewOnce(ctx, msg, out) {
+		if strings.TrimSpace(out.Text) == "" {
+			return nil
+		}
 	}
 	if evt.IsViewOnce {
 		out.Text = strings.TrimSpace("👁 (view once) " + out.Text)
@@ -155,6 +161,79 @@ func (c *Client) extract(ctx context.Context, evt *events.Message) *Incoming {
 		out.Text = strings.TrimSpace("✏️ (edited) " + out.Text)
 	}
 	return out
+}
+
+// applyQuotedViewOnce implements the RVO (read-view-once) trick: when a reply
+// quotes a view-once message, WhatsApp includes the full media of the quoted
+// view-once message in the reply's ContextInfo.QuotedMessage, and that media
+// can be downloaded normally. This is how a view-once message is read even
+// though its own payload is withheld from linked devices. It returns true if
+// a message was produced (media or a notice), false if nothing to forward.
+func (c *Client) applyQuotedViewOnce(ctx context.Context, msg *waE2E.Message, out *Incoming) bool {
+	dm, kind, size, mime, ok := viewOnceQuoted(msg)
+	if !ok {
+		return false
+	}
+	out.Kind = kind
+	out.Quoted = "👁 view once"
+	out.Media = c.download(ctx, dm, size, mime, string(kind), out)
+	return out.Media != nil
+}
+
+// viewOnceQuoted finds the view-once media inside a reply's quoted message.
+// WhatsApp embeds the quoted view-once media in ContextInfo, so it is
+// downloadable even though the original message never reached this device.
+func viewOnceQuoted(msg *waE2E.Message) (whatsmeow.DownloadableMessage, Kind, uint64, string, bool) {
+	quoted := quotedMessage(msg)
+	if quoted == nil || quoted.GetReactionMessage() != nil {
+		return nil, "", 0, "", false
+	}
+
+	// The quoted media may arrive wrapped in a ViewOnceMessage (or V2) payload;
+	// unwrap it first so GetImageMessage etc. see the media.
+	quoted = unwrapViewOnce(quoted)
+
+	var (
+		dm   whatsmeow.DownloadableMessage
+		kind Kind
+		size uint64
+		mime string
+		isVO bool
+	)
+	switch {
+	case quoted.GetImageMessage() != nil:
+		m := quoted.GetImageMessage()
+		dm, kind, size, mime, isVO = m, KindImage, m.GetFileLength(), m.GetMimetype(), m.GetViewOnce()
+	case quoted.GetVideoMessage() != nil:
+		m := quoted.GetVideoMessage()
+		dm, kind, size, mime, isVO = m, KindVideo, m.GetFileLength(), m.GetMimetype(), m.GetViewOnce()
+	case quoted.GetAudioMessage() != nil:
+		m := quoted.GetAudioMessage()
+		dm, kind, size, mime, isVO = m, KindAudio, m.GetFileLength(), m.GetMimetype(), m.GetViewOnce()
+	case quoted.GetPtvMessage() != nil:
+		m := quoted.GetPtvMessage()
+		dm, kind, size, mime, isVO = m, KindVideo, m.GetFileLength(), m.GetMimetype(), m.GetViewOnce()
+	default:
+		return nil, "", 0, "", false
+	}
+	if !isVO {
+		return nil, "", 0, "", false
+	}
+	return dm, kind, size, mime, true
+}
+
+// unwrapViewOnce pulls the inner message out of a ViewOnceMessage wrapper.
+func unwrapViewOnce(msg *waE2E.Message) *waE2E.Message {
+	if inner := msg.GetViewOnceMessage().GetMessage(); inner != nil {
+		return inner
+	}
+	if inner := msg.GetViewOnceMessageV2().GetMessage(); inner != nil {
+		return inner
+	}
+	if inner := msg.GetViewOnceMessageV2Extension().GetMessage(); inner != nil {
+		return inner
+	}
+	return msg
 }
 
 // download fetches and decrypts media, refusing anything Telegram could not
@@ -203,8 +282,8 @@ func ownPushName(evt *events.Message) string {
 	return evt.Info.PushName
 }
 
-// quotedExcerpt renders a short preview of the message being replied to.
-func quotedExcerpt(msg *waE2E.Message) string {
+// quotedMessage returns the message a reply is quoting, or nil.
+func quotedMessage(msg *waE2E.Message) *waE2E.Message {
 	var ctxInfo *waE2E.ContextInfo
 	switch {
 	case msg.GetExtendedTextMessage() != nil:
@@ -220,7 +299,15 @@ func quotedExcerpt(msg *waE2E.Message) string {
 	case msg.GetStickerMessage() != nil:
 		ctxInfo = msg.GetStickerMessage().GetContextInfo()
 	}
-	quoted := ctxInfo.GetQuotedMessage()
+	if ctxInfo == nil {
+		return nil
+	}
+	return ctxInfo.GetQuotedMessage()
+}
+
+// quotedExcerpt renders a short preview of the message being replied to.
+func quotedExcerpt(msg *waE2E.Message) string {
+	quoted := quotedMessage(msg)
 	if quoted == nil {
 		return ""
 	}

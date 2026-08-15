@@ -330,7 +330,7 @@ func (c *Client) describeUnavailable(ctx context.Context, evt *events.Undecrypta
 
 	text := "🔒 A message could not be delivered to this linked device. Open WhatsApp on your phone to see it."
 	if evt.UnavailableType == events.UnavailableTypeViewOnce {
-		text = "👁 View-once message. WhatsApp does not send these to linked devices, so open it on your phone."
+		text = "👁 View-once message. Reply to it from WhatsApp and the bridge will try to read it here."
 	}
 
 	// The push name on our own messages is ours, not the contact's.

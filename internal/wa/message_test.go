@@ -3,7 +3,125 @@ package wa
 import (
 	"strings"
 	"testing"
+
+	"go.mau.fi/whatsmeow/proto/waE2E"
+	"google.golang.org/protobuf/proto"
 )
+
+// viewOnceImage builds a reply that quotes a view-once image, the shape the
+// RVO trick relies on.
+func viewOnceImage() *waE2E.Message {
+	return &waE2E.Message{
+		ExtendedTextMessage: &waE2E.ExtendedTextMessage{
+			Text: proto.String("baca"),
+			ContextInfo: &waE2E.ContextInfo{
+				QuotedMessage: &waE2E.Message{
+					ImageMessage: &waE2E.ImageMessage{
+						ViewOnce:  proto.Bool(true),
+						Mimetype:  proto.String("image/jpeg"),
+						FileLength: proto.Uint64(1234),
+					},
+				},
+			},
+		},
+	}
+}
+
+func TestViewOnceQuotedDetectsImage(t *testing.T) {
+	dm, kind, size, mime, ok := viewOnceQuoted(viewOnceImage())
+	if !ok {
+		t.Fatal("expected a view-once media to be detected")
+	}
+	img, isImg := dm.(*waE2E.ImageMessage)
+	if !isImg {
+		t.Fatalf("expected *ImageMessage, got %T", dm)
+	}
+	if !img.GetViewOnce() {
+		t.Error("quoted media should carry the view-once flag")
+	}
+	if kind != KindImage || size != 1234 || mime != "image/jpeg" {
+		t.Errorf("got kind=%q size=%d mime=%q", kind, size, mime)
+	}
+}
+
+func TestViewOnceQuotedUnwrapsWrapper(t *testing.T) {
+	msg := &waE2E.Message{
+		ExtendedTextMessage: &waE2E.ExtendedTextMessage{
+			Text: proto.String("baca"),
+			ContextInfo: &waE2E.ContextInfo{
+				QuotedMessage: &waE2E.Message{
+					ViewOnceMessage: &waE2E.FutureProofMessage{
+						Message: &waE2E.Message{
+							ImageMessage: &waE2E.ImageMessage{
+								ViewOnce: proto.Bool(true),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	dm, kind, _, _, ok := viewOnceQuoted(msg)
+	if !ok {
+		t.Fatal("expected wrapped view-once media to be detected")
+	}
+	if _, isImg := dm.(*waE2E.ImageMessage); !isImg {
+		t.Fatalf("expected *ImageMessage after unwrap, got %T", dm)
+	}
+	if kind != KindImage {
+		t.Errorf("kind = %q, want %q", kind, KindImage)
+	}
+}
+
+func TestViewOnceQuotedIgnoresNormalQuote(t *testing.T) {
+	msg := &waE2E.Message{
+		ExtendedTextMessage: &waE2E.ExtendedTextMessage{
+			Text: proto.String("ok"),
+			ContextInfo: &waE2E.ContextInfo{
+				QuotedMessage: &waE2E.Message{
+					Conversation: proto.String("pesan biasa"),
+				},
+			},
+		},
+	}
+	if _, _, _, _, ok := viewOnceQuoted(msg); ok {
+		t.Error("a plain text quote must not be treated as view-once")
+	}
+}
+
+func TestViewOnceQuotedIgnoresNonViewOnceMedia(t *testing.T) {
+	msg := &waE2E.Message{
+		ExtendedTextMessage: &waE2E.ExtendedTextMessage{
+			Text: proto.String("ok"),
+			ContextInfo: &waE2E.ContextInfo{
+				QuotedMessage: &waE2E.Message{
+					ImageMessage: &waE2E.ImageMessage{
+						ViewOnce: proto.Bool(false),
+					},
+				},
+			},
+		},
+	}
+	if _, _, _, _, ok := viewOnceQuoted(msg); ok {
+		t.Error("a normal (non-view-once) quoted image must not match")
+	}
+}
+
+func TestViewOnceQuotedIgnoresPlainMessage(t *testing.T) {
+	if _, _, _, _, ok := viewOnceQuoted(&waE2E.Message{Conversation: proto.String("hi")}); ok {
+		t.Error("a message without a quote must not match")
+	}
+}
+
+func TestQuotedMessage(t *testing.T) {
+	quoted := quotedMessage(viewOnceImage())
+	if quoted == nil || quoted.GetImageMessage() == nil {
+		t.Fatal("expected the quoted image message")
+	}
+	if quoted.GetImageMessage().GetMimetype() != "image/jpeg" {
+		t.Errorf("mime = %q", quoted.GetImageMessage().GetMimetype())
+	}
+}
 
 func TestFilenameFor(t *testing.T) {
 	tests := []struct {

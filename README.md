@@ -171,12 +171,14 @@ Behaviour worth knowing:
 - **Size limits**: Telegram caps bots at 50 MB for uploads and 20 MB for
   downloads. Anything above that is not transferred; a note appears in the
   topic instead, so nothing disappears silently.
-- **View-once messages** cannot be relayed. WhatsApp deliberately withholds
-  their content from linked devices — the server only sends an empty
-  placeholder (`<unavailable type="view_once">`), and the follow-up request to
-  the phone is refused. The bridge posts an "open it on your phone" note in the
-  matching topic so you still know something arrived. This is a platform
-  restriction, not something code can work around.
+- **View-once messages** are withheld from linked devices — the server only
+  sends an empty placeholder (`<unavailable type="view_once">`), and the
+  follow-up request to the phone is refused. The bridge posts a note in the
+  matching topic. The RVO trick recovers the media anyway: reply to the
+  view-once message from WhatsApp (any text is fine), and because your reply
+  quotes it, WhatsApp sends the media along inside the quote. The bridge sees
+  that quoted media and forwards it into the topic. It only works if the reply
+  is made *from WhatsApp* — replying from Telegram alone cannot unlock it.
 - **A deleted topic** in Telegram is detected from the send error: the bridge
   creates a fresh topic for that contact and re-delivers the message.
 - **Hidden numbers (LID)**: WhatsApp now sometimes uses `@lid` identities

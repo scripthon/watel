@@ -125,8 +125,8 @@ func TestViewOnceIsReportedAsNotice(t *testing.T) {
 		if !strings.Contains(strings.ToLower(msg.Text), "view-once") {
 			t.Errorf("Text = %q, want it to mention view-once", msg.Text)
 		}
-		if !strings.Contains(strings.ToLower(msg.Text), "phone") {
-			t.Errorf("Text = %q, want it to tell the user to open their phone", msg.Text)
+		if !strings.Contains(strings.ToLower(msg.Text), "reply") {
+			t.Errorf("Text = %q, want it to suggest replying to read it", msg.Text)
 		}
 	case <-time.After(5 * time.Second):
 		t.Fatal("no notice was delivered for a view-once message")
